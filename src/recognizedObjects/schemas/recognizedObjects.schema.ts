@@ -11,7 +11,7 @@ export class RecognizedObject {
   id_estacion: string;
 
   @Prop()
-  timestamp: string;  
+  timestamp: Date;  
 
   @Prop([ObjectDetectedSchema])
   objectsDetected: ObjectDetected[];

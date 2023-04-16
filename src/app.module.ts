@@ -8,7 +8,9 @@ import { RecognizedObjecsModule } from './recognizedObjects/recognizedObjects.mo
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/recognizedObjects'),
+    //Esta base de datos es la primaria, con timestamp con string
+    //MongooseModule.forRoot('mongodb://localhost:27017/recognizedObjects'),
+    MongooseModule.forRoot('mongodb://localhost:27017/recognizedObjectsDB'),
     //UsersModule,
     //BooksModule,
     RecognizedObjecsModule,
