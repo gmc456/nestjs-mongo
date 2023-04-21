@@ -13,12 +13,14 @@ import { Request } from 'express';
 import { RecognizedObjectsService } from './recognizedObjects.service';
 import { CreateRecognizedObjectDto } from './dto/create-recognizedObjects.dto';
 import { ParseObjectIdPipe } from '../utilities/parse-object-id-pipe.pipe';
+import { Subject, firstValueFrom, map, take } from 'rxjs';
 
 @Controller('recognizedObjects')
 @ApiTags('recognizedObject')
 export class RecognizedObjectsController {
+  firstName: Promise<Number>;
   constructor(private readonly recognizedObjectsService: RecognizedObjectsService,
-    /*private readonly httpService: HttpService*/) {}
+    private readonly httpService: HttpService) {}
 
   @Post()
   create(@Body() createRecognizedObjectDto: CreateRecognizedObjectDto) {
@@ -31,32 +33,29 @@ export class RecognizedObjectsController {
   }
 
   @Get('current_detected_objects/:object_type/:space/:building')
-  getCurrentDetectedObjects(@Param('object_type') object_type: string, 
+  async getCurrentDetectedObjects(@Param('object_type') object_type: string, 
   @Param('space') space: string, @Param('building') building: string) {
-    let count = this.recognizedObjectsService.getCurrentDetectedObjects(object_type, 'portatil-gabriel')
-    .then((value) => {
-      
-    });
-  }
-
+    const response = await firstValueFrom(this.httpService.get(`http://localhost:3000/devices/get_id/`+space+`/`+building));
+    return this.recognizedObjectsService.getCurrentDetectedObjects(object_type, response.data);
+  }  
   @Get('current_full_detected_objects/:space/:building')
-  getCurrentDetectedObjectsFull(@Param('space') space: string, @Param('building') building: string) {
-    /*var id_estacion = this.httpService.get(`http://localhost:3000/devices/get_id/{$space}/{$building}`);
-    console.log("gaby");
-    console.log(id_estacion);*/
-    return this.recognizedObjectsService.getCurrentFullDetectedObjects("portatil_gabriel");
+  async getCurrentDetectedObjectsFull(@Param('space') space: string, @Param('building') building: string) {
+    const response = await firstValueFrom(this.httpService.get(`http://localhost:3000/devices/get_id/`+space+`/`+building));
+    return this.recognizedObjectsService.getCurrentFullDetectedObjects(response.data);
   }
 
   @Get('detected_objects/:object_type/:space/:building/:from/:to')
-  getDetectedObjects(@Param('object_type') object_type: string, 
+  async getDetectedObjects(@Param('object_type') object_type: string, 
   @Param('space') space: string, @Param('building') building: string,
   @Param('from') from: Date, @Param('to') to: Date) {
-    return this.recognizedObjectsService.getDetectedObjects(object_type, 'portatil-gabriel', from, to);
+    const response = await firstValueFrom(this.httpService.get(`http://localhost:3000/devices/get_id/`+space+`/`+building));  
+    return this.recognizedObjectsService.getDetectedObjects(object_type, response.data, from, to);
   }
 
   @Get('full_detected_objects/:space/:building/:from/:to')
-  getFullDetectedObjectsFull(@Param('space') space: string, @Param('building',) building: string,
+  async getFullDetectedObjectsFull(@Param('space') space: string, @Param('building',) building: string,
   @Param('from') from: Date, @Param('to') to: Date) {
-    return this.recognizedObjectsService.getFullDetectedObjects('portatil-gabriel', from, to);
+    const response = await firstValueFrom(this.httpService.get(`http://localhost:3000/devices/get_id/`+space+`/`+building));  
+    return this.recognizedObjectsService.getFullDetectedObjects(response.data, from, to);
   }
 }

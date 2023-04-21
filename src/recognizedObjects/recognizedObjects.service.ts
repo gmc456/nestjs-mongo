@@ -23,34 +23,31 @@ export class RecognizedObjectsService {
       .exec();
   }
 
-  async getCurrentDetectedObjects(object_type: string, id_estacion: string): Promise<Object> {
-    //return this.recognizedObjectModel.count({'objectsDetected.object' : object_type}).where({id_estacion: id_estacion}).sort([['timestamp', 1]]).limit(1).exec();
+  async getCurrentDetectedObjects(object_type: string, id_estacion: string): Promise<Number> {
     return this.recognizedObjectModel.aggregate([{$match: {id_estacion: id_estacion}}, {$sort: {timestamp: -1}},
-      {$limit: 1}, {$unwind: '$objectsDetected'}, {$group: {_id: '$objectsDetected.object', count: {$sum: 1}}}]).exec();
+      {$limit: 1}, {$unwind: '$objectsDetected'}, {$group: {_id: '$objectsDetected.object', count: {$sum: 1}}},
+      {$match:{_id: object_type}}]).exec().then((value) => {
+        return value[0]['count'];
+      });
   }
-
-  async test(object_type: string, id_estacion: string): Promise<RecognizedObject> {
-    return this.recognizedObjectModel.findOne({id_estacion: id_estacion}).sort([['timestamp', -1]]).exec();
-  }
-
+  
   async getCurrentFullDetectedObjects(id_estacion: any): Promise<Object> {
-    //return this.recognizedObjectModel.count({'objectsDetected.object' : object_type}).where({id_estacion: id_estacion}).sort([['timestamp', 1]]).limit(1).exec();
     return this.recognizedObjectModel.aggregate([{$match: {id_estacion: id_estacion}}, {$sort: {timestamp: -1}},
       {$limit: 1}, {$unwind: '$objectsDetected'}, {$group: {_id: '$objectsDetected.object', count: {$sum: 1}}}]).exec();
   }
                              
-  async getDetectedObjects(object_type: string, id_estacion: string, from: Date, to: Date): Promise<number> {
-    return this.recognizedObjectModel.count({'objectsDetected.object' : object_type}).where({id_estacion: id_estacion, timestamp: { $gte: from, $lte: to }}).exec();
-  }
-
-  async test2(object_type: string, id_estacion: string, from: Date, to: Date): Promise<RecognizedObject[]> {
-    return this.recognizedObjectModel.find({id_estacion: id_estacion, timestamp: { $gte: from, $lte: to }}).exec();
+  async getDetectedObjects(object_type: string, id_estacion: string, from: Date, to: Date): Promise<Number> {
+    return this.recognizedObjectModel.aggregate([
+      {$match: {id_estacion: id_estacion, timestamp: { $gte: new Date(from), $lte: new Date(to) }}}, {$sort: {timestamp: -1}},
+      {$unwind: '$objectsDetected'}, {$group: {_id: '$objectsDetected.object', count: {$sum: 1}}},
+      {$match:{_id: object_type}}]).exec().then((value) => {
+        return value[0]['count'];
+      });
   }
 
   async getFullDetectedObjects(id_estacion: string, from: Date, to: Date): Promise<Object> {
-    //return this.recognizedObjectModel.count({'objectsDetected.object' : object_type}).where({id_estacion: id_estacion}).sort([['timestamp', 1]]).limit(1).exec();
     return this.recognizedObjectModel.aggregate([
-      {$match: {id_estacion: id_estacion, timestamp: { $gte: from, $lte: to }}}, 
+      {$match: {id_estacion: id_estacion, timestamp: { $gte: new Date(from), $lte: new Date(to) }}}, {$sort: {timestamp: -1}}, 
       {$unwind: '$objectsDetected'}, 
       {$group: {_id: {date: '$timestamp', objects: '$objectsDetected.object'}, count: {$sum: 1}}},
       {$group: {_id: '$_id.date', tobjects: {$push: {object: '$_id.objects', total: '$count'}}}}]).exec();
