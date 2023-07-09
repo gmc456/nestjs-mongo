@@ -55,6 +55,8 @@ export class RecognizedObjectsController {
   @Get('full_detected_objects/:space/:building/:from/:to')
   async getFullDetectedObjectsFull(@Param('space') space: string, @Param('building',) building: string,
   @Param('from') from: Date, @Param('to') to: Date) {
+    console.log(from)
+    console.log(to)
     const response = await firstValueFrom(this.httpService.get(`http://localhost:3000/devices/get_id/`+space+`/`+building));  
     return this.recognizedObjectsService.getFullDetectedObjects(response.data, from, to);
   }
